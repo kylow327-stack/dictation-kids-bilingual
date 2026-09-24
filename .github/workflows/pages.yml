@@ -18,24 +18,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble monolith from gzip+b64 parts
+      - name: Assemble monolith index.html
         run: |
           set -euo pipefail
-          if ls build/mono.part*.b64 >/dev/null 2>&1; then
+          if ls build/gz*.hex >/dev/null 2>&1; then
+            cat $(ls build/gz*.hex | sort) | xxd -r -p | gunzip > index.html
+            echo "Assembled from gz hex bytes=$(wc -c < index.html)"
+          elif ls build/mono.part*.b64 >/dev/null 2>&1; then
             cat $(ls build/mono.part*.b64 | sort) | tr -d '\n' | base64 -d | gunzip > index.html
-            echo "Assembled index.html bytes=$(wc -c < index.html)"
-            grep -q 'dictation-bi-v4' index.html
-            grep -q 'dictLangGet' index.html
-            if grep -q 'getDictLang' index.html; then echo FORBIDDEN; exit 1; fi
-          elif ls build/p*.b64 >/dev/null 2>&1; then
-            : > index.html
-            for f in $(ls build/p*.b64 | sort); do base64 -d "$f" >> index.html; done
-            echo "Assembled from p*.b64 bytes=$(wc -c < index.html)"
-            grep -q 'dictation-bi-v4' index.html
-            grep -q 'dictLangGet' index.html
+            echo "Assembled from mono b64 bytes=$(wc -c < index.html)"
           else
             test -f index.html
           fi
+          grep -q 'dictation-bi-v4' index.html
+          grep -q 'dictLangGet' index.html
+          if grep -q 'getDictLang' index.html; then echo FORBIDDEN; exit 1; fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
