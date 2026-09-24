@@ -25,5 +25,6 @@ node test/smoke-html.test.js
 ```
 
 ## Files
-- `index.html` — UI + practice modes
+- `index.html` — UI + practice modes (slim: loads `core.js` + lang stub + `app.js`)
 - `core.js` — pure bilingual helpers (DictCore)
+- `app.js` — application logic
