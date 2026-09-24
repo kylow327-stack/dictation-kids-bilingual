@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-edition="bilingual">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- 重要：線上音源（百度 / Google）有防盜鏈，會拒收帶 Referer 的請求，故整頁不發 Referer -->
+<meta name="referrer" content="no-referrer">
+<!-- 本工作台通过 WorkBuddy「资料库」skill 搭建、存储和部署 -->
+<title>默書小達人（中英雙語）</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="langBar" style="background:#e3f2fd;color:#0d47a1;font-size:13px;padding:8px 14px;text-align:center;border-bottom:1px solid #bbdefb;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;">
+  <span style="font-weight:700;">默書語言</span>
+  <button type="button" id="btnLangEn" style="border:1px solid #1976d2;background:#fff;color:#1565c0;border-radius:999px;padding:4px 14px;font-size:13px;cursor:pointer;">英文默書</button>
+  <button type="button" id="btnLangZh" style="border:1px solid #2e7d32;background:#fff;color:#1b5e20;border-radius:999px;padding:4px 14px;font-size:13px;cursor:pointer;">中文默書</button>
+  <span id="langBannerTip" style="opacity:.9;"></span>
+</div>
+
+<div id="app">
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5V5.5z" fill="#ff8a3d"/><path d="M4 20.5A2.5 2.5 0 0 1 6.5 18H20v3H6.5" fill="#e05555"/><path d="M8 7h8M8 10.5h5" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/></svg>
+      默書小達人<span class="name-line empty" id="brandName">&nbsp;</span>
+    </div>
+    <div class="topright">
+      <span class="sync busy" id="syncDot"></span><span id="syncText">同步中…</span>
+      <button class="btn-ghost" id="btnParent">家長</button>
+    </div>
+  </header>
+  <main>
+
+    <!-- 首頁 -->
+    <section id="screen-home" class="screen">
+      <div class="card task-card">
+        <h2><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#ff8a3d" stroke-width="2"/><path d="M12 7v5l3 2" stroke="#ff8a3d" stroke-width="2" stroke-linecap="round"/></svg>今天要處理</h2>
+        <div id="todayInfo"></div>
+        <div id="progressInfo"></div>
+      </div>
+      <div class="module-grid">
+        <button class="module-btn sentence" data-goto="sentence">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M5 4h14v16H5z" stroke="#fff" stroke-width="2" rx="2"/><path d="M8 8h8M8 12h8M8 16h5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+          <span><span class="m-title">句子默書</span><br><span class="m-sub">拼句子 · 填空 · 中譯默書</span></span>
+        </button>
+        <button class="module-btn word" data-goto="word">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 19V6a2 2 0 0 1 2-2h13v15H6a2 2 0 0 0-2 2z" stroke="#fff" stroke-width="2"/><path d="M9 7.5l1.2 3M14.5 7.5l-1.2 3M10.2 10.5h3.1" stroke="#fff" stroke-width="1.6" stroke-linecap="round"/><path d="M4 19a2 2 0 0 1 2-2h13" stroke="#fff" stroke-width="2"/></svg>
+          <span><span class="m-title">單詞默書</span><br><span class="m-sub">閃卡點讀 · 拼寫</span></span>
+        </button>
+      </div>
+      <div class="card">
+        <h2>🌟 我的積分與獎勵</h2>
+        <div id="pointsInfo"></div>
+      </div>
+    </section>
+
+    <!-- 錯題複習 -->
+    <section id="screen-wrong" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="home">返回</button><div class="p-title">錯題複習</div></div>
+      <div class="card">
+        <div id="wrongList"></div>
+        <div style="height:12px"></div>
+        <div class="actions">
+          <button class="btn-big btn-check" id="wrongCheck">檢查</button>
+        </div>
+        <div class="msg" id="wrongMsg"></div>
+      </div>
+    </section>
+
+    <!-- 句子關卡選擇 -->
+    <section id="screen-sentence" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="home">返回</button><div class="p-title">句子默書 · 選關卡</div></div>
+      <div class="level-list">
+        <div class="level-card" data-start="s1">
+          <div class="level-num lv-orange">1</div>
+          <div class="level-info"><div class="l-name">拼句子</div><div class="l-desc">把單詞卡片排成正確的句子（標點也算一個詞）</div></div>
+          <div class="level-stars" id="lvS1">⭐ 0/6</div>
+        </div>
+        <div class="level-card" data-start="s2">
+          <div class="level-num lv-green">2</div>
+          <div class="level-info"><div class="l-name">填空</div><div class="l-desc">每次空 2-3 個詞，錯 3 次有提示</div></div>
+          <div class="level-stars" id="lvS2">⭐ 0/6</div>
+          <div class="level-lock" id="lockS2">🔒<div class="lock-tip">先過上一關</div></div>
+        </div>
+        <div class="level-card" data-start="s3">
+          <div class="level-num lv-blue">3</div>
+          <div class="level-info"><div class="l-name">英文翻譯默書</div><div class="l-desc">看英文提示，寫出整句中文</div></div>
+          <div class="level-stars" id="lvS3">⭐ 0/6</div>
+          <div class="level-lock" id="lockS3">🔒<div class="lock-tip">先過上一關</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 單詞關卡選擇 -->
+    <section id="screen-word" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="home">返回</button><div class="p-title">單詞默書 · 選關卡</div></div>
+      <div class="level-list">
+        <div class="level-card" data-start="w1">
+          <div class="level-num lv-purple">1</div>
+          <div class="level-info"><div class="l-name">閃卡點讀</div><div class="l-desc">聽發音 · 跟着讀 · 錄音對比</div></div>
+          <div class="level-stars" id="lvW1">已讀 0/10</div>
+        </div>
+        <div class="level-card" data-start="w2">
+          <div class="level-num lv-green">2</div>
+          <div class="level-info"><div class="l-name">拼寫默書</div><div class="l-desc">看英文意思，寫出中文詞</div></div>
+          <div class="level-stars" id="lvW2">⭐ 0/10</div>
+          <div class="level-lock" id="lockW2">🔒<div class="lock-tip">先過上一關</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- S1 拼句子 -->
+    <section id="screen-s1" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="sentence">返回</button><div class="p-title">關卡 1 · 拼句子</div><span class="p-progress" id="s1Progress"></span></div>
+      <div class="card">
+        <div class="hint-emoji" id="s1Emoji"></div>
+        <div class="hint-label">圖片提示</div>
+        <div style="height:12px"></div>
+        <div class="slots" id="s1Slots"></div>
+        <div class="bank" id="s1Bank"></div>
+        <div class="actions">
+          <button class="ctrl-btn ctrl-speak" id="s1Speak">🔊 聽語音</button>
+          <button class="btn-big btn-check" id="s1Check">檢查</button>
+          <button class="btn-big btn-next hidden" id="s1Next">下一題 ›</button>
+        </div>
+        <div class="msg" id="s1Msg"></div>
+      </div>
+    </section>
+
+    <!-- S2 填空 -->
+    <section id="screen-s2" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="sentence">返回</button><div class="p-title">關卡 2 · 填空</div><span class="p-progress" id="s2Progress"></span></div>
+      <div class="card">
+        <div class="hint-emoji" id="s2Emoji"></div>
+        <div class="hint-label">圖片提示</div>
+        <div style="height:12px"></div>
+        <div class="sent-line" id="s2Line"></div>
+        <div style="height:14px"></div>
+        <div class="actions">
+          <button class="ctrl-btn ctrl-speak" id="s2Speak">🔊 聽語音</button>
+          <button class="btn-big btn-check" id="s2Check">提交</button>
+          <button class="btn-big btn-next hidden" id="s2Next">下一題 ›</button>
+        </div>
+        <div class="msg" id="s2Msg"></div>
+      </div>
+    </section>
+
+    <!-- S3 中文翻譯默書 -->
+    <section id="screen-s3" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="sentence">返回</button><div class="p-title">關卡 3 · 中文翻譯默書</div><span class="p-progress" id="s3Progress"></span></div>
+      <div class="card">
+        <div class="zh-big" id="s3Zh"></div>
+        <div class="hint-label">請寫出對應的英文句子</div>
+        <div style="height:12px"></div>
+        <div class="sent-line" id="s3Line"></div>
+        <div style="height:14px"></div>
+        <div class="actions">
+          <button class="ctrl-btn ctrl-speak" id="s3Speak">聽發音</button>
+          <button class="btn-big btn-check" id="s3Check">檢查</button>
+          <button class="btn-big btn-next hidden" id="s3Next">下一題 ›</button>
+        </div>
+        <div class="msg" id="s3Msg"></div>
+      </div>
+    </section>
+
+    <!-- W1 閃卡點讀 -->
+    <section id="screen-w1" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="word">返回</button><div class="p-title">關卡 1 · 閃卡點讀</div><span class="p-progress" id="w1Progress"></span></div>
+      <div class="flashcard">
+        <div class="f-emoji" id="w1Emoji"></div>
+        <div class="f-word" id="w1Word"></div>
+        <div class="f-syl" id="w1Syl"></div>
+        <div class="f-zh" id="w1Zh"></div>
+      </div>
+      <div class="card-btns">
+        <button class="ctrl-btn ctrl-speak" id="w1Speak">🔊 點讀</button>
+        <button class="ctrl-btn ctrl-rec" id="w1Rec">⏺ 錄音</button>
+        <button class="ctrl-btn ctrl-play" id="w1Play">▶ 播放</button>
+      </div>
+      <div class="actions">
+        <button class="btn-big btn-prev" id="w1Prev">‹ 上一個</button>
+        <button class="btn-big btn-next" id="w1NextAct">下一個 ›</button>
+      </div>
+      <div class="msg" id="w1Msg"></div>
+    </section>
+
+    <!-- W2 拼寫 -->
+    <section id="screen-w2" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="word">返回</button><div class="p-title">關卡 2 · 拼寫默書</div><span class="p-progress" id="w2Progress"></span></div>
+      <div class="card">
+        <div class="hint-emoji" id="w2Emoji"></div>
+        <div class="w2-guess" id="w2Zh"></div>
+        <div class="hint-label">中文意思 — 寫出英文單詞</div>
+        <div style="height:8px"></div>
+        <div class="card-btns"><button class="ctrl-btn ctrl-speak" id="w2Speak">🔊 聽發音</button></div>
+        <div class="w2-input-row">
+          <input class="w2-input" id="w2Input" lang="zh-Hant" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="輸入中文…" lang="zh-Hant" inputmode="text" autocomplete="off">
+        </div>
+        <div class="actions">
+          <button class="btn-big btn-check" id="w2Check">檢查</button>
+          <button class="btn-big btn-next hidden" id="w2Next">下一個 ›</button>
+        </div>
+        <div class="msg" id="w2Msg"></div>
+      </div>
+    </section>
+
+    <!-- 家長端 -->
+    <section id="screen-parent" class="screen hidden">
+      <div class="play-top"><button class="btn-ghost back" data-goto="home">返回</button><div class="p-title">家長端 · 題庫管理</div></div>
+
+      <div id="parentGate" class="card pw-box">
+        <h2 style="justify-content:center;">家長密碼</h2>
+        <div class="pw-tip" id="pwTip">請輸入 4 位數密碼</div>
+        <input type="password" id="pwInput" inputmode="numeric" maxlength="4" autocomplete="off">
+        <div style="height:14px"></div>
+        <button class="btn-big btn-next" id="pwOk">確定</button>
+        <div class="pw-err" id="pwErr"></div>
+      </div>
+
+      <div id="parentPanel" class="hidden">
+        <div class="card p-section">
+          <h3>本次默書</h3>
+          <div class="form-grid">
+            <div class="f-field"><label>默書日期</label><input type="date" id="pDate"></div>
+            <div class="f-field"><label>孩子名字（標題劃綫處）</label><input type="text" id="pChildName" maxlength="12" placeholder="例如：小明（留空則只顯示劃綫）"></div>
+            <div class="f-field full" style="align-self:end;"><button class="btn-big btn-next" id="pDateSave" style="width:100%;">保存設置</button></div>
+          </div>
+        </div>
+
+        <div class="card p-section">
+          <h3>任務管理</h3>
+          <div class="form-grid">
+            <div class="f-field"><label>當前任務（學習/複習）</label><select id="pTaskSelect"></select></div>
+          </div>
+        </div>
+
+        <div class="card p-section">
+          <h3>批量導入（推薦）</h3>
+          <div class="bulk-hint">
+            ① 複製下面的 Prompt 給豆包 / DeepSeek / 元寶，讓它讀圖轉文字 → ② 結果整段粘貼到下面 → ③ 按「導入題庫」。<br>
+            一行一條，序號可有可無（會自動補）；<b>中文意思會自動翻譯</b>，不滿意可在下面題庫點中文改。
+          </div>
+          <div class="tr-prompt">
+            <div class="tr-prompt-hd">
+              <span>給 AI 的 Prompt（點右上角複製）</span>
+              <button class="btn-mini" id="bCopyPrompt" type="button">複製</button>
+            </div>
+            <pre id="bPrompt"></pre>
+          </div>
+          <div class="form-grid">
+            <div class="f-field full"><label>任務名稱（默認今天日期）</label><input type="text" id="bTask" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="例如：1001-Dictation"></div>
+            <div class="f-field full">
+              <label>粘貼 AI 平台讀圖生成的文字</label>
+              <textarea id="bText" class="bulk-ta" rows="9" spellcheck="false" autocapitalize="off" autocomplete="off" placeholder="sentence:&#10;1. 我最喜歡的地方是圖書館。 = My favourite place is the library.&#10;2. 我們可以爬上樹屋在那裏看書。&#10;&#10;word:&#10;1. 禮堂 = hall&#10;2. 遊樂場 = playground"></textarea>
+            </div>
+          </div>
+          <div class="bulk-preview" id="bPreview"></div>
+          <div style="height:12px"></div>
+          <div class="actions">
+            <button class="btn-big btn-check" id="bImport">導入題庫</button>
+            <button class="btn-ghost" id="bSample">插入示例</button>
+            <button class="btn-ghost" id="bClear">清空</button>
+          </div>
+        </div>
+
+        <div class="card p-section">
+          <h3>題庫（按任務分批）</h3>
+          <div class="tk-sum" id="pSummary"></div>
+          <div id="pList"></div>
+          <div id="rowTemplate" class="hidden" aria-hidden="true"><!-- 列表行渲染模板：data-field 与字段一一对应 -->
+            <span class="badge" data-field="type"></span>
+            <span class="item-en" data-field="en"></span>
+            <span data-field="zh"></span>
+            <span class="item-emoji" data-field="emoji"></span>
+            <span data-field="order"></span>
+          </div>
+        </div>
+
+        <div class="card p-section">
+          <h3>工具</h3>
+          <div class="tool-row">
+            <button class="btn-ghost" id="pExport">導出 JSON 備份</button>
+            <button class="btn-ghost" id="pResync">重新同步雲端</button>
+          </div>
+          <div class="empty-tip">題庫保存在這台裝置的瀏覽器裏（離線也能用）：每台裝置各自獨立，換裝置請導出備份搬過去。</div>
+        </div>
+
+        <!-- 管理員入口：家長端下面的一個小按鈕，只有站長自己會用到 -->
+        <div class="adm-entry">
+          <button class="adm-toggle" id="admToggle" type="button">管理員</button>
+        </div>
+
+        <div id="adminBox" class="hidden">
+          <div class="card p-section" id="admGate">
+            <h3>管理員驗證</h3>
+            <div class="adm-row">
+              <input type="password" id="admPw" maxlength="64" autocomplete="current-password"
+                     autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="管理員密碼">
+              <button class="btn-big btn-next" id="admOk">進入</button>
+            </div>
+            <div class="pw-err" id="admErr"></div>
+          </div>
+
+          <div id="adminPanel" class="hidden">
+            <div class="card p-section">
+              <h3>訪客統計</h3>
+              <div class="st-grid" id="stGrid"></div>
+              <div class="st-chart" id="stChart"></div>
+              <div class="st-note" id="stNote"></div>
+              <div class="actions" style="justify-content:flex-start;">
+                <button class="btn-ghost" id="stRefresh">重新整理</button>
+                <button class="btn-ghost" id="stSelf">本機不計入統計</button>
+                <button class="btn-ghost" id="stReset">清空統計</button>
+              </div>
+            </div>
+            <div class="adm-entry">
+              <button class="adm-toggle" id="admOut" type="button">退出管理員</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+  <div id="certModal" class="cert-modal hidden">
+    <div class="cert-box">
+      <img id="certImg" alt="獎狀">
+      <div class="actions">
+        <button class="btn-big btn-check" id="certSave">保存獎狀圖片</button>
+        <button class="btn-ghost" id="certClose">關閉</button>
+      </div>
+      <div class="empty-tip">長按圖片也可以保存</div>
+    </div>
+  </div>
+  <div id="doneModal" class="cert-modal hidden">
+    <div class="cert-box">
+      <div style="font-size:64px;line-height:1;">🎉</div>
+      <div style="font-size:26px;font-weight:800;margin:10px 0 4px;">恭喜你完成關卡！</div>
+      <div id="doneText" style="color:#7a8090;font-weight:700;"></div>
+      <div class="actions">
+        <button class="btn-big btn-check" id="doneOk">太好了！回到選關卡</button>
+      </div>
+    </div>
+  </div>
+  <div id="toast"></div>
+</div>
+
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
