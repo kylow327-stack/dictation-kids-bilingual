@@ -1,2 +1,3 @@
-# dictation-kids-bilingual
-Kids dictation SPA — bilingual EN+ZH (默書小達人)
+# 默書小達人（中英雙語）
+
+Placeholder — full site push follows.
