@@ -18,20 +18,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Assemble monolith index.html from ascii-safe b64 chunks
+      - name: Assemble monolith from gzip+b64 parts
         run: |
           set -euo pipefail
-          if ls build/p*.b64 >/dev/null 2>&1; then
-            : > index.html
-            for f in $(ls build/p*.b64 | sort); do
-              base64 -d "$f" >> index.html
-            done
+          if ls build/mono.part*.b64 >/dev/null 2>&1; then
+            cat $(ls build/mono.part*.b64 | sort) | tr -d '\n' | base64 -d | gunzip > index.html
             echo "Assembled index.html bytes=$(wc -c < index.html)"
             grep -q 'dictation-bi-v4' index.html
             grep -q 'dictLangGet' index.html
-            if grep -q 'getDictLang' index.html; then echo 'FORBIDDEN getDictLang'; exit 1; fi
+            if grep -q 'getDictLang' index.html; then echo FORBIDDEN; exit 1; fi
+          elif ls build/p*.b64 >/dev/null 2>&1; then
+            : > index.html
+            for f in $(ls build/p*.b64 | sort); do base64 -d "$f" >> index.html; done
+            echo "Assembled from p*.b64 bytes=$(wc -c < index.html)"
+            grep -q 'dictation-bi-v4' index.html
+            grep -q 'dictLangGet' index.html
           else
-            echo "No b64 chunks; using committed index.html"
             test -f index.html
           fi
       - uses: actions/configure-pages@v5
