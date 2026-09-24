@@ -4,7 +4,7 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 concurrency:
@@ -18,6 +18,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Assemble monolith index.html
+        run: |
+          set -euo pipefail
+          if [ -d build ] && ls build/p*.txt >/dev/null 2>&1; then
+            cat $(ls build/p*.txt | sort) > index.html
+            echo "Assembled index.html bytes=$(wc -c < index.html)"
+            grep -q 'dictation-bi-v4' index.html
+            grep -q 'dictLangGet' index.html
+            if grep -q 'getDictLang' index.html; then echo 'FORBIDDEN getDictLang present'; exit 1; fi
+          else
+            echo "No build chunks; using committed index.html"
+            test -f index.html
+          fi
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
