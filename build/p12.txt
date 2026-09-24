@@ -1,0 +1,39 @@
+  var L = DictCore.modeLabels(window.dictLangGet());
+  var tip = document.getElementById('langBannerTip');
+  if(tip) tip.textContent = L.banner;
+  var be = document.getElementById('btnLangEn');
+  var bz = document.getElementById('btnLangZh');
+  if(be && bz){
+    var enOn = window.dictLangGet()==='en';
+    be.style.background = enOn ? '#1976d2' : '#fff';
+    be.style.color = enOn ? '#fff' : '#1565c0';
+    bz.style.background = !enOn ? '#2e7d32' : '#fff';
+    bz.style.color = !enOn ? '#fff' : '#1b5e20';
+  }
+  function setTxt(sel, text){ var el=document.querySelector(sel); if(el) el.textContent=text; }
+  setTxt('#lvS3') ; // leave stars
+  // level cards by structure
+  var cards = document.querySelectorAll('.level-card, .level');
+  // set by known ids / names
+  document.querySelectorAll('.l-name').forEach(function(el){
+    var t=el.textContent.trim();
+    if(t.indexOf('翻譯默書')>=0 || t==='中文翻譯默書' || t==='英文翻譯默書'){ el.textContent=L.s3Name; var d=el.parentNode && el.parentNode.querySelector('.l-desc'); if(d) d.textContent=L.s3Desc; }
+    if(t==='拼寫默書'){ var d=el.parentNode && el.parentNode.querySelector('.l-desc'); if(d) d.textContent=L.w2Desc; }
+  });
+  var w2 = document.getElementById('w2Input');
+  if(w2){ w2.placeholder=L.w2Placeholder; if(window.dictLangGet()==='zh'){ w2.setAttribute('lang','zh-Hant'); } else { w2.removeAttribute('lang'); } }
+}
+function bindLangToggle(){
+  var be=document.getElementById('btnLangEn');
+  var bz=document.getElementById('btnLangZh');
+  if(be) be.addEventListener('click', function(){ if(window.dictLangGet()!=='en') window.dictLangSetAndReload('en'); });
+  if(bz) bz.addEventListener('click', function(){ if(window.dictLangGet()!=='zh') window.dictLangSetAndReload('zh'); });
+  applyModeLabels();
+}
+try{ bindLangToggle(); }catch(e){ console.warn(e); }
+
+})();
+
+</script>
+</body>
+</html>
