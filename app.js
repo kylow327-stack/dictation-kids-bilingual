@@ -1,9 +1,8 @@
 (function(){
-  var n=5, parts=new Array(n), left=n;
+  var n=8, parts=new Array(n), left=n;
   function go(){
     if(left) return;
-    var code=parts.join("");
-    (0,eval)(code);
+    (0,eval)(parts.join(""));
   }
   for(var i=0;i<n;i++)(function(i){
     var x=new XMLHttpRequest();
